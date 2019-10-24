@@ -6,8 +6,8 @@ class App extends Component {
     countDown: 1000,
     atWork: false,
     taskGenerated: false,
-    buttonTitle: "Start",
     pomodoreCount: 0,
+    mainButton: "Start",
     pomodoreTaskDescription: "",
     pomodoreTaskArray: []
   };
@@ -22,33 +22,26 @@ class App extends Component {
     });
   };
 
-  //   handleChange = (e) => {
-  //     this.setState(prevState => ({
-  //         items: {
-  //             ...prevState.items,
-  //             [prevState.items[1].name]: e.target.value,
-  //         },
-  //     }));
-  // };
-
-  onUpdateItem = (i, event) => {
+  onUpdateItem = (event, i) => {
     event.preventDefault();
     this.setState(state => {
       const pomodoreTaskArray = state.pomodoreTaskArray.map((item, j) => {
-        console.log(item, j);
-        // if (j === i) {
-        //   return (item = 1);
-        // } else {
-        //   return item;
-        // }
+        if (j === i) {
+          return (item = this.state.pomodoreTaskDescription);
+        } else {
+          return item;
+        }
       });
       return {
         pomodoreTaskArray
       };
     });
+    this.setState({
+      pomodoreTaskDescription: ""
+    });
   };
 
-  handleSubmit = () => {
+  generatePomodoreEntry = () => {
     this.setState({
       pomodoreTaskArray: [
         ...this.state.pomodoreTaskArray,
@@ -57,14 +50,6 @@ class App extends Component {
       pomodoreTaskDescription: ""
     });
   };
-
-  // handleSubmitTwo = event => {
-  //   this.setState({
-  //     pomodoreTaskArray: event.target.value,
-  //     pomodoreTaskDescription: ""
-  //   });
-  //   event.preventDefault();
-  // };
 
   countDown = async () => {
     if (this.state.countDown > 0) {
@@ -76,7 +61,8 @@ class App extends Component {
         pomodoreCount: this.state.pomodoreCount + 1,
         atWork: false,
         countDown: 1000,
-        taskGenerated: false
+        taskGenerated: false,
+        mainButton: "Start"
       });
       clearInterval(this.intervalId);
     }
@@ -90,7 +76,7 @@ class App extends Component {
 
   startTime = () => {
     if (!this.state.taskGenerated) {
-      this.handleSubmit();
+      this.generatePomodoreEntry();
     }
     clearInterval(this.intervalId);
     this.setState({
@@ -105,12 +91,13 @@ class App extends Component {
   pauseTime = () => {
     clearInterval(this.intervalId);
     this.setState({
-      atWork: false
+      atWork: false,
+      mainButton: "Resume"
     });
   };
 
   skipBreak = () => {
-    this.handleSubmit();
+    this.generatePomodoreEntry();
     this.setState({
       countDown: 1000,
       pomodoreCount: this.state.pomodoreCount + 1
@@ -122,7 +109,8 @@ class App extends Component {
     this.setState({
       countDown: 1000,
       atWork: false,
-      taskGenerated: false
+      taskGenerated: false,
+      pomodoreCount: this.state.pomodoreCount + 1
     });
     clearInterval(this.intervalId);
   };
@@ -146,16 +134,22 @@ class App extends Component {
     let tasks = taskArray.map((task, index) => {
       return (
         <div key={index}>
-          <form onSubmit={this.onUpdateItem}>
+          <form onSubmit={event => this.onUpdateItem(event, index)}>
             <label>
               Pomodore #{index + 1}
-              <input
-                type="text"
-                placeholder="What will you do with these 25 minutes?"
-                onChange={this.handleChange}
-              />
+              {this.state.pomodoreTaskArray[index] ? (
+                <p>{this.state.pomodoreTaskArray[index]}</p>
+              ) : (
+                <input
+                  type="text"
+                  placeholder="What will you do with these 25 minutes?"
+                  onChange={this.handleChange}
+                />
+              )}
             </label>
-            <input type="submit" value="Submit" />
+            {!this.state.pomodoreTaskArray[index] && (
+              <input type="submit" value="Submit" />
+            )}
           </form>
         </div>
       );
@@ -169,19 +163,20 @@ class App extends Component {
         <div className="header">
           <h1>Pomadorable</h1>
         </div>
-        {this.state.atWork && (
-          <button className="btn" onClick={this.pauseTime}>
-            Pause
-          </button>
-        )}
-        {!this.state.atWork && (
+        {!this.state.atWork ? (
           <button className="btn" onClick={this.startTime}>
-            Start
+            {this.state.mainButton}
           </button>
+        ) : (
+          <div>
+            <button className="btn" onClick={this.pauseTime}>
+              Pause
+            </button>
+            <button className="btn" onClick={this.resetTimer}>
+              End
+            </button>
+          </div>
         )}
-        <button className="btn" onClick={this.resetTimer}>
-          Reset
-        </button>
         {this.state.countDown < 300 && (
           <button className="btn" onClick={this.skipBreak}>
             Skip Break
